@@ -13,6 +13,7 @@ const root = {
 	    h: Math.min(window.innerWidth/1.6, window.innerHeight),
 	};
 	const mobile = /Mobi|Android/i.test(navigator.userAgent);
+	console.log(mobile)
 	const gameConfig = {
 	    height: (mobile)? h : 400,
 	    width: (mobile)? w : 800,
