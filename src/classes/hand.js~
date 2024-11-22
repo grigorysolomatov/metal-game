@@ -1,0 +1,22 @@
+export class Hand {
+    constructor() {
+	this.context = {};
+    }
+    set(data) {
+	Object.assign(this.context, data);
+	return this;
+    }
+    async insert(...newCards) {
+	const {x, y, cards} = this.context;
+	cards.push(...newCards);
+	const p_tweens = cards.map((card, i) => new Promise(resolve => {
+	    card.tween({
+		x + i*card.width,
+		y,
+		duration: 200,
+		ease: 'Cubic.easeOut',
+	    });
+	}));
+	await Promise.all(p_tweens);	
+    }
+}
