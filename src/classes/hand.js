@@ -88,7 +88,7 @@ export class Hand {
 	cards.forEach(card => card.setInteractive());
 	const selected = [];
 	for (let i=0; i<num; i++) {
-	    const p_selected = cards.map(async card => { await card.event('pointerover'); return card; });
+	    const p_selected = cards.map(async card => { await card.event('pointerup'); return card; });
 	    const card = await Promise.race(p_selected);
 	    card.removeAllListeners().disableInteractive();
 	    selected.push(card);

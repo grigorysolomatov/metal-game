@@ -8,9 +8,14 @@ const root = {
 	    google: { families: ['Metal Mania'] },
 	    active: resolve,
 	}));
+	const {w, h} = {
+	    w: window.innerWidth,
+	    h: Math.min(window.innerWidth/1.6, window.innerHeight),
+	};
+	const mobile = /Mobi|Android/i.test(navigator.userAgent);
 	const gameConfig = {
-	    height: Math.min(window.innerWidth/1.6, window.innerHeight),
-	    width: window.innerWidth,
+	    height: (mobile)? h : 400,
+	    width: (mobile)? w : 800,
 	    backgroundColor: '#111111',
 	    type: Phaser.WEBGL,
 	};
