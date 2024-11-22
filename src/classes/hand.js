@@ -74,8 +74,7 @@ export class Hand {
 	const taken = [...cards];
 	if (release) { this.release(taken); }
 	return taken;
-    }
-    
+    }    
     release(oldCards) {
 	const {cards} = this.context;
 	const newCards = cards.filter(card => !oldCards.includes(card));
@@ -102,6 +101,19 @@ export class Hand {
 	if (release) { this.release(selected); }
 	    
 	return selected;
+    }
+    async iterate(delay) {
+	const {cards, duration, ease} = this.context;
+	const p_it = cards.map(async (card, i) => {
+	    await timeout(delay*i);
+	    card.tween({
+		scale: {from: card.baseScale*1.2, to: card.baseScale},
+		duration: 2*duration,
+		ease,
+	    });
+	});
+	await Promise.all(p_it);
+	return;
     }
     size() {
 	const {cards} = this.context;

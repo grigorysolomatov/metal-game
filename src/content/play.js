@@ -17,7 +17,7 @@ export const play = {
 	    const glow = scene.newSprite(x, y, 'glow').setDisplaySize(100, 100).setAlpha(0);
 	    glow.baseScale = glow.scale;	    
 	    [glow].map(async () => {
-		await timeout(4000 + 1000);
+		await timeout(5500);
 		while (true) {
 		    glow.tween({
 			alpha: {from: 1, to: 0.0},
@@ -48,9 +48,15 @@ export const play = {
 	// await timeout(200);
 
 	while (true) {
-	    if (table.size() >= 4) { await deck.insert(table.takeAll()); }
+	    if (table.size() >= 4) {
+		await timeout(500);
+		await table.iterate(500);
+		await timeout(500);
+		await deck.insert(table.takeAll());
+		await timeout(500);
+	    }
 	    await hand.insert(deck.take(6 - hand.size()));
-	    await table.insert(await hand.select(2));
+	    await table.insert(await hand.select(2));	    
 	}	
 	
 	const choice = await scene.newMenu(0.1*width, 0.9*height, {
