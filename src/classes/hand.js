@@ -2,121 +2,100 @@ import { timeout } from '../tools/async.js';
 
 export class Hand {
     constructor() {
-	this.context = {
+	this.ctx = {
 	    cards: [],
-	    delay: 75,
-	    step: 1.1,
-	    duration: 200,
-	    scale: 1,
+	    duration: 300,
+	    width: 80,
+	    step: 85,
 	    ease: 'Cubic.easeOut',
-	    positions: cards => cards.map((card, i) => {
-		const {x, y, step} = this.context;
-		const pos = {
-		    x: x + (i + 0.5*(1 - cards.length))*card.width*card.baseScale*step,
-		    y,
-		};
-		return pos;
-	    }),
 	};
     }
     set(data) {
-	Object.assign(this.context, data);
+	Object.assign(this.ctx, data);
 	return this;
-    }
-    async create(newCards) {
-	const {cards, duration, delay, ease, x, y, positions} = this.context;
-	
-	positions([...cards, ...newCards])
-	    .forEach((x_y, i) => Object.assign(newCards[i].setAlpha(0).setScale(0), x_y));
-	await this.insert(newCards);
-	const p_create = newCards.map(async (card, i) => {
-	    await timeout(delay*i*0.5);
-	    card.tween({
-		alpha: 1,
-		scale: {from: 0, to: card.baseScale},
-		duration: duration,
-		ease,
-	    });
-	});
-	await Promise.all(p_create);
     }
     async insert(newCards) {
-	const {x, y, cards, delay, step, duration, scale, ease} = this.context;
+	const {cards, getSpots, duration, ease, width, delay, x, y, step} = this.ctx;
 	cards.push(...newCards);
-
-	let j = 0;
-	const p_tweens = cards.map(async (card, i) => {
-	    j += (i >= cards.length - newCards.length);
-	    await timeout(delay*j)
-	    card.setDepth(100+i).tween({
-		y,
-		x: x + (i + 0.5*(1 - cards.length))*card.width*card.baseScale*step,
-		scale: scale*card.baseScale,
-		duration: duration,
-		ease,
-	    });
-	    card.setDepth(0);
+	const spots = ({
+	    getSpots: () => {
+		const spots = cards.map((card, i) => {
+		    const spot = {x: x + (i + 0.5*(1 - cards.length))*step, y: y};
+		    return spot;
+		    //return [pos.x, pos.y];
+		});
+		return spots;
+	    },
+	}).getSpots();
+	cards.forEach(card => card.setDepth(card.depth + 100));
+	const p_move = cards.map(async (card, i) => {
+	    await timeout(i*duration/cards.length);
+	    const {x, y} = spots[i];
+	    const scale = width/card.width;
+	    await card.tween({x, y, scale, duration, ease});
 	});
-	await Promise.all(p_tweens);
+	cards.forEach((card, i) => card.setDepth(card.depth - 100));
+	await Promise.all(p_move);	
     }
-    takeAll(release=true) {
-	return this.take(undefined, release);
+    async create(newCards) {
+	const {cards, duration, ease, delay} = this.ctx;
+	newCards.forEach(card => card.setAlpha(0));
+	
+	this.set({duration: 0});
+	await this.insert(newCards);
+	this.set({duration});
+	
+	const p_make = newCards.map(async (card, i) => {
+	    await timeout(i*duration/cards.length);
+	    await card.tween({scale: {from: 0, to: card.scale}, alpha: 1, duration, ease})
+	});
+	await Promise.all(p_make);
+	return this;
     }
-    take(num, release=true) {
-	const {cards} = this.context;
-	const taken = cards.slice(0, num || cards.length);
-	if (release) { this.release(taken); }
+    async select(num) {
+	const {cards, duration, ease} = this.ctx;
+
+	const selected = [];
+	cards.forEach(card => card.removeAllListeners().setInteractive());
+	while (selected.length <  num) {
+	    const p_cards = cards.map(async card => { await card.event('pointerup'); return card; });
+	    const card = await Promise.race(p_cards);
+	    card.disableInteractive().removeAllListeners()
+		.tween({y: card.y - card.displayHeight*0.2, duration, ease});
+	    selected.push(card);
+	}
+	cards.forEach(card => card.disableInteractive().removeAllListeners());
+
+	selected.release = () => this.release(selected);
+	
+	return selected;
+    }
+    slice(start, end) {
+	const {cards} = this.ctx;
+	const taken = cards.slice(start, end);
+
+	taken.release = () => this.release(taken);
 	
 	return taken;
     }
-    takeAll(release=true) {
-	const {cards} = this.context;
-	const taken = [...cards];
-	if (release) { this.release(taken); }
-	return taken;
-    }    
     release(oldCards) {
-	const {cards} = this.context;
+	const {cards} = this.ctx;
 	const newCards = cards.filter(card => !oldCards.includes(card));
 	this.set({cards:newCards});
-	return this;
-    }
-    async select(num, release=true) {
-	const {cards, duration, ease} = this.context;
-
-	cards.forEach(card => card.setInteractive());
-	const selected = [];
-	for (let i=0; i<num; i++) {
-	    const p_selected = cards.map(async card => { await card.event('pointerup'); return card; });
-	    const card = await Promise.race(p_selected);
-	    card.removeAllListeners().disableInteractive();
-	    selected.push(card);
-	    card.tween({
-		y: card.y - card.displayHeight*0.2,
-		duration,
-		ease,
-	    });
-	}
-
-	if (release) { this.release(selected); }
-	    
-	return selected;
-    }
-    async iterate(delay) {
-	const {cards, duration, ease} = this.context;
-	const p_it = cards.map(async (card, i) => {
-	    await timeout(delay*i);
-	    card.tween({
-		scale: {from: card.baseScale*1.2, to: card.baseScale},
-		duration: 2*duration,
-		ease,
-	    });
-	});
-	await Promise.all(p_it);
-	return;
+	return oldCards;
     }
     size() {
-	const {cards} = this.context;
+	const {cards} = this.ctx;
 	return cards.length;
+    }
+    async shuffle() {
+	const {cards, duration} = this.ctx;
+	cards
+	    .sort(() => Math.random() - 0.5)
+	    .sort(() => Math.random() - 0.5)
+	    .sort(() => Math.random() - 0.5);
+	this.set({duration: 0});
+	await this.insert([]);
+	this.set({duration});
     }
 }

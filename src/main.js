@@ -1,6 +1,8 @@
 import { createGame } from './tools/wrap-phaser.js';
 import { StateTree } from './tools/state.js';
 import { play } from './content/play.js';
+import { assets } from './content/paths.js';
+
 
 const root = {
     0: async ctx => {
@@ -14,8 +16,8 @@ const root = {
 	};
 	const mobile = /Mobi|Android/i.test(navigator.userAgent);
 	const gameConfig = {
-	    height: (mobile)? h : 400,
-	    width: (mobile)? w : 800,
+	    height: (mobile)? h : 412,
+	    width: (mobile)? w : 915,
 	    backgroundColor: '#111111',
 	    type: Phaser.WEBGL,
 	};
@@ -24,15 +26,15 @@ const root = {
 	    fontSize: '32px',
 	    fill: '#ffffff',
 	};
-	const assets = {
-	    card: 'assets/exported/card.png',
-	    glow: 'assets/exported/glow.png',
-	};
 	
 	const scene = await createGame(gameConfig).newScene('MainScene');
-	await scene.setTextDefaults(textDefaults).loadAssets(assets);	
+	await scene.setTextDefaults(textDefaults).loadAssets(assets);
 	
 	const {width, height} = scene.game.config;
+	const background = scene
+	      .newSprite(0.5*width, 0.5*height, 'background')
+	      .setDisplaySize(width, height)
+	      .setTint(0x222222);
 	Object.assign(ctx, {scene, width, height});
 	
 	return 'main';
@@ -42,7 +44,7 @@ const root = {
 	    const {scene, width, height} = ctx;
 	    const choice = await scene.newMenu(0.5*width, 0.5*height, {
 		play: 'Play',
-		learn: 'Learn',
+		learn: '',
 	    });
 	    return choice;
 	},

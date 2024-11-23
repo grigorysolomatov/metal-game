@@ -31,7 +31,7 @@ export class StateMachine {
     async run() {
 	const {states, start: startState, context={}} = this.external;
 	
-	let currentState = startState;
+	let currentState = startState || Object.keys(states)[0];
 	while (true) {
 	    if (!states[currentState]) { break; }
 	    currentState = await states[currentState](context);
