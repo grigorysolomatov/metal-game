@@ -27,14 +27,14 @@ export class Hand {
 		return spots;
 	    },
 	}).getSpots();
-	cards.forEach(card => card.setDepth(card.depth + 100));
+	cards.forEach(card => card.setDepth(card.depth + 1000));
 	const p_move = cards.map(async (card, i) => {
 	    await timeout(i*duration/cards.length);
 	    const {x, y} = spots[i];
 	    const scale = width/card.width;
 	    await card.tween({x, y, scale, duration, ease});
 	});
-	cards.forEach((card, i) => card.setDepth(card.depth - 100));
+	cards.forEach((card, i) => card.setDepth(card.depth - 1000));
 	await Promise.all(p_move);	
     }
     async create(newCards) {
