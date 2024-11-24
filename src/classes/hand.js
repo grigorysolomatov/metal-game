@@ -4,7 +4,7 @@ export class Hand {
     constructor() {
 	this.ctx = {
 	    cards: [],
-	    duration: 300,
+	    duration: 300, // 300
 	    width: 80,
 	    step: 85,
 	    ease: 'Cubic.easeOut',
@@ -16,7 +16,7 @@ export class Hand {
     }
     async insert(newCards) {
 	const {cards, getSpots, duration, ease, width, delay, x, y, step} = this.ctx;
-	cards.push(...newCards);
+	cards.push(...newCards.reverse());
 	const spots = ({
 	    getSpots: () => {
 		const spots = cards.map((card, i) => {
@@ -27,14 +27,21 @@ export class Hand {
 		return spots;
 	    },
 	}).getSpots();
-	cards.forEach(card => card.setDepth(card.depth + 1000));
+	// cards.forEach((card, i) => card.setDepth(card.depth + i));
 	const p_move = cards.map(async (card, i) => {
+	    // card.setDepth(i + 100);
+	    const oldDepth = card.depth;
+	    const newDepth = i;
+	    
 	    await timeout(i*duration/cards.length);
 	    const {x, y} = spots[i];
 	    const scale = width/card.width;
-	    await card.tween({x, y, scale, duration, ease});
+	    await card.tween({x, y, scale, duration, ease, onUpdate: tween => {
+		const t = Math.min(1, tween.progress*2);
+		card.setDepth((1-t)*oldDepth + t*newDepth);
+	    }});
 	});
-	cards.forEach((card, i) => card.setDepth(card.depth - 1000));
+	// cards.forEach((card, i) => card.setDepth(card.depth - 1000));
 	await Promise.all(p_move);	
     }
     async create(newCards) {
@@ -87,15 +94,5 @@ export class Hand {
     size() {
 	const {cards} = this.ctx;
 	return cards.length;
-    }
-    async shuffle() {
-	const {cards, duration} = this.ctx;
-	cards
-	    .sort(() => Math.random() - 0.5)
-	    .sort(() => Math.random() - 0.5)
-	    .sort(() => Math.random() - 0.5);
-	this.set({duration: 0});
-	await this.insert([]);
-	this.set({duration});
     }
 }

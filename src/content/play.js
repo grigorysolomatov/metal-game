@@ -18,8 +18,11 @@ const states = {
 	
 	const deck = new Hand().set({x: width-40, y: height - 0.5*1.6*40 - 0.5*40, width: 40, step: 0});
 	const discard = new Hand().set({x: 40, y: height - 0.5*1.6*40 - 0.5*40, width: 40, step: 0});
+	const shuffle = new Hand().set({
+	    x: width-40, y: -150 + height - 0.5*1.6*40 - 0.5*40, width: 40, step: 0, duration: 150,
+	});
 
-	Object.assign(ctx, {table, deck, hand, discard, tension, satisfaction});
+	Object.assign(ctx, {table, deck, hand, discard, tension, satisfaction, shuffle});
 	return 's_deal';
     },
     s_deal: async ctx => {
@@ -32,14 +35,13 @@ const states = {
 	    await table.create(new Array(3).fill().map(_ => makeCard(i)));
 	    await deck.insert(table.slice().release());
 	}
-	await deck.shuffle();
-	return 's_play';
+	return 's_shuffle';
     },
     s_play: async ctx => {
-	const {table, hand, deck, discard, tension, satisfaction} = ctx;
+	const {table, hand, deck, discard, tension, satisfaction} = ctx;	
 	await hand.insert(deck.slice(deck.size()-(6 - hand.size())).release());
 
-	if (deck.size() <= 0) { return 's_shuffle'; }
+	if (deck.size() <= 0) { return 's_restock'; }
 	
 	await table.insert((await hand.select(2)).release().reverse());
 	
@@ -53,13 +55,19 @@ const states = {
 	    satisfaction.add(1); tension.add(2);
 	    return card;
 	}); await Promise.all(p_play);
-	await discard.insert(table.slice().release());
+	await discard.insert(table.slice().release().reverse());
 	
 	return 's_play';
     },
-    s_shuffle: async ctx => {
+    s_restock: async ctx => {
 	const {discard, deck} = ctx;
 	await deck.insert(discard.slice().release());
+	return 's_shuffle';
+    },
+    s_shuffle: async ctx => {
+	const {deck, shuffle} = ctx;	
+	await shuffle.insert(deck.slice().release().sort(() => Math.random() - 0.5));
+	await deck.insert(shuffle.slice().release().sort(() => Math.random() - 0.5));
 	return 's_play';
     },
 };
