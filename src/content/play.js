@@ -11,12 +11,15 @@ const states = {
 
 	const images = []
 	const background = new Background().set({scene, images: [
-	    'field', 'hill', 'mountain_low', 'mountain_high', 'atmosphere', 'earth', 'sun', 'space',
-	    'galaxy', 'cluster', 'creatures', 'cthulu', 'universe',
+	    'field', 'hill', 'mountain_low', 'mountain_high', 'atmosphere',
+	    'earth', 'sun', 'space', 'galaxy', 'cluster',
+	    'creatures', 'cthulu', 'azathoth',
+	    'simulation', 'computation', 'simghosts', 'simgod',
+	    'simfractal', 'fractal', 'mandala', 'mandalasculs', 'devil',
 	]});
 	background.set({duration: 1000});
 	background.next();
-	background.set({duration: 8000});
+	background.set({duration: 2000});
 
 	const tension = new Counter().set({scene, image: 'tension', x:100, y: 100}).create();
 	const satisfaction = new Counter().set({scene, image: 'satisfaction', x:width-100, y: 100}).create();
@@ -65,16 +68,14 @@ const states = {
 	    satisfaction.add(1); tension.add(2);
 	    return card;
 	}); await Promise.all(p_play);
-	await discard.insert(table.slice().release().reverse());
-
-	
+	await discard.insert(table.slice().release().reverse());	
 	
 	return 's_travel';
     },
     s_travel: async ctx => {
 	const {background, satisfaction} = ctx;
 	
-	if (satisfaction.get() >= 6*(background.progress() + 1)) { background.next(); }
+	if (satisfaction.get() >= 2*(background.progress() + 1)) { background.next(); }
 
 	return 's_play';
     },

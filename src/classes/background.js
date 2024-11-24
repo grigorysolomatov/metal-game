@@ -14,7 +14,7 @@ export class Background {
     async next() {
 	const {scene, images, sprite, duration, ease, idx, tint} = this.ctx;
 	const {width, height} = scene.game.config;
-	sprite?.tween({alpha: 0, duration, ease});
+	sprite?.tween({alpha: 0, duration, ease, onComplete: () => sprite.destroy()});
 	const newSprite = scene
 	      .newSprite(0.5*width, 0.5*height, images[idx+1])
 	      .setDisplaySize(width, height)
