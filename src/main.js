@@ -30,11 +30,7 @@ const root = {
 	const scene = await createGame(gameConfig).newScene('MainScene');
 	await scene.setTextDefaults(textDefaults).loadAssets(assets);
 	
-	const {width, height} = scene.game.config;
-	const background = scene
-	      .newSprite(0.5*width, 0.5*height, 'background')
-	      .setDisplaySize(width, height)
-	      .setTint(0x222222);
+	const {width, height} = scene.game.config;	
 	Object.assign(ctx, {scene, width, height});
 	
 	return 'main';

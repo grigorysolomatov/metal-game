@@ -3,10 +3,20 @@ import { StateMachine } from '../tools/state.js';
 import { Hand } from '../classes/hand.js';
 import { Counter } from '../classes/counter.js';
 import { Card } from '../classes/card.js';
+import { Background } from '../classes/background.js';
 
 const states = {
     s_setup: async ctx => {
-	const {scene, width, height} = ctx;	
+	const {scene, width, height} = ctx;
+
+	const images = []
+	const background = new Background().set({scene, images: [
+	    'field', 'hill', 'mountain_low', 'mountain_high', 'atmosphere', 'earth', 'sun', 'space',
+	    'galaxy', 'cluster', 'creatures', 'cthulu', 'universe',
+	]});
+	background.set({duration: 1000});
+	background.next();
+	background.set({duration: 8000});
 
 	const tension = new Counter().set({scene, image: 'tension', x:100, y: 100}).create();
 	const satisfaction = new Counter().set({scene, image: 'satisfaction', x:width-100, y: 100}).create();
@@ -22,7 +32,7 @@ const states = {
 	    x: width-40, y: -150 + height - 0.5*1.6*40 - 0.5*40, width: 40, step: 0, duration: 150,
 	});
 
-	Object.assign(ctx, {table, deck, hand, discard, tension, satisfaction, shuffle});
+	Object.assign(ctx, {table, deck, hand, discard, tension, satisfaction, shuffle, background});
 	return 's_deal';
     },
     s_deal: async ctx => {
@@ -56,7 +66,16 @@ const states = {
 	    return card;
 	}); await Promise.all(p_play);
 	await discard.insert(table.slice().release().reverse());
+
 	
+	
+	return 's_travel';
+    },
+    s_travel: async ctx => {
+	const {background, satisfaction} = ctx;
+	
+	if (satisfaction.get() >= 6*(background.progress() + 1)) { background.next(); }
+
 	return 's_play';
     },
     s_restock: async ctx => {
