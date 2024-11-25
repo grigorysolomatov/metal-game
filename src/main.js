@@ -28,9 +28,15 @@ const root = {
 	};
 	
 	const scene = await createGame(gameConfig).newScene('MainScene');
-	await scene.setTextDefaults(textDefaults).loadAssets(assets);
+	scene.setTextDefaults(textDefaults);
+	const {width, height} = scene.game.config;
 	
-	const {width, height} = scene.game.config;	
+	const loading = scene.newText(0.5*width, 0.5*height, 'Loading').setOrigin(0.5).setAlpha(0);
+	loading.tween({alpha: 1, duration: 1000, ease: 'Cubic.easeOut'});
+	await scene.loadAssets(assets);
+	await loading.tween({alpha: 0, duration: 500, ease: 'Cubic.easeOut'});
+	loading.destroy();
+	
 	Object.assign(ctx, {scene, width, height});
 	
 	return 'main';
