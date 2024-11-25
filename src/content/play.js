@@ -2,7 +2,7 @@ import { timeout } from '../tools/async.js';
 import { StateMachine } from '../tools/state.js';
 import { Hand } from '../classes/hand.js';
 import { Counter } from '../classes/counter.js';
-import { Card } from '../classes/card.js';
+import { CardLogic } from '../classes/card-logic.js';
 import { Background } from '../classes/background.js';
 
 const states = {
@@ -39,36 +39,44 @@ const states = {
 	return 's_deal';
     },
     s_deal: async ctx => {
-	const {scene, table, deck} = ctx;
-
-	const types = ['guitar', 'base', 'drums', 'keyboard'];
-	const makeCard = i => new Card().set({scene, image: types[i]}).create().sprite();
+	const {scene, table, deck, tension, satisfaction} = ctx;
 	
-	for (let i=0; i<4; i++) {
-	    await table.create(new Array(3).fill().map(_ => makeCard(i)));
+	const effects = {
+	    guitar: async () => { await satisfaction.add(1); },
+	    drums: async () => { await satisfaction.add(1); },
+	    base: async () => { await tension.add(1); },
+	    keyboard: async () => { await tension.add(1); },
+	};
+	const makeCard = key => {
+	    const card = scene.newSprite(0, 0, key);
+	    const effect = effects[key]
+	    new CardLogic().set({effect}).attach(card);
+	    return card;
+	};
+	for (const key of Object.keys(effects)) {
+	    await table.create(new Array(3).fill().map(_ => makeCard(key)));
 	    await deck.insert(table.slice().release());
 	}
 	return 's_shuffle';
     },
     s_play: async ctx => {
-	const {table, hand, deck, discard, tension, satisfaction} = ctx;	
+	const {table, hand, deck, discard} = ctx;	
 	await hand.insert(deck.slice(deck.size()-(6 - hand.size())).release());
 
 	if (deck.size() <= 0) { return 's_restock'; }
 	
 	await table.insert((await hand.select(2)).release().reverse());
-	
-	const p_play = table.slice().map(async card => {
-	    await timeout(100);
-	    await card.tween({
+
+	await timeout(100);
+	for (const card of table.slice()) {	    
+	    card.tween({
 		scale: {from: 1.2*card.scale, to: card.scale},
 		duration: 500,
 		ease: 'Cubic.easeOut',
 	    });
-	    satisfaction.add(1); tension.add(2);
-	    return card;
-	}); await Promise.all(p_play);
-	await discard.insert(table.slice().release().reverse());	
+	    await card.logic.activate();
+	}
+	await discard.insert(table.slice().release().reverse());
 	
 	return 's_travel';
     },
