@@ -11,7 +11,7 @@ const states = {
 
 	const images = []
 	const background = new Background().set({scene, images: [
-	    'field', 'hill', 'mountain_low', 'mountain_high', 'atmosphere',
+	    'field', 'hill', 'mountains', 'atmosphere',
 	    'earth', 'sun', 'space', 'galaxy', 'cluster',
 	    'creatures', 'cthulu', 'azathoth',
 	    'simulation', 'computation', 'simghosts', 'simgod',
@@ -41,7 +41,7 @@ const states = {
     s_deal: async ctx => {
 	const {scene, table, deck} = ctx;
 
-	const types = ['guitarist', 'basist', 'drummer', 'keyboarder'];
+	const types = ['guitar', 'base', 'drums', 'keyboard'];
 	const makeCard = i => new Card().set({scene, image: types[i]}).create().sprite();
 	
 	for (let i=0; i<4; i++) {
