@@ -2,14 +2,13 @@ import { timeout } from '../tools/async.js';
 import { StateMachine } from '../tools/state.js';
 import { Hand } from '../classes/hand.js';
 import { Counter } from '../classes/counter.js';
-import { CardLogic } from '../classes/card-logic.js';
 import { Background } from '../classes/background.js';
+import * as cards from '../classes/cards.js';
 
 const states = {
     s_setup: async ctx => {
 	const {scene, width, height} = ctx;
-
-	const images = []
+	
 	const background = new Background().set({scene, images: [
 	    'field', 'hill', 'mountains', 'atmosphere',
 	    'earth', 'sun', 'space', 'galaxy', 'cluster',
@@ -40,21 +39,14 @@ const states = {
     },
     s_deal: async ctx => {
 	const {scene, table, deck, tension, satisfaction} = ctx;
-	
-	const effects = {
-	    guitar: async () => { await satisfaction.add(1); },
-	    drums: async () => { await satisfaction.add(1); },
-	    base: async () => { await tension.add(1); },
-	    keyboard: async () => { await tension.add(1); },
-	};
-	const makeCard = key => {
-	    const card = scene.newSprite(0, 0, key);
-	    const effect = effects[key]
-	    new CardLogic().set({effect}).attach(card);
+
+	const makeCard = type => {
+	    const card = new cards[type]().set({scene, tension, satisfaction}).create().sprite;
 	    return card;
 	};
-	for (const key of Object.keys(effects)) {
-	    await table.create(new Array(3).fill().map(_ => makeCard(key)));
+	const types = ['Gauss', 'Riemann', 'Cauchy', 'Euler'];
+	for (const type of types) {
+	    await table.create(new Array(3).fill().map(_ => makeCard(type)));
 	    await deck.insert(table.slice().release());
 	}
 	return 's_shuffle';
@@ -68,13 +60,13 @@ const states = {
 	await table.insert((await hand.select(2)).release().reverse());
 
 	await timeout(100);
-	for (const card of table.slice()) {	    
+	for (const card of table.slice()) {
 	    card.tween({
 		scale: {from: 1.2*card.scale, to: card.scale},
 		duration: 500,
 		ease: 'Cubic.easeOut',
 	    });
-	    await card.logic.activate();
+	    await card.logic.trigger(table.slice());
 	}
 	await discard.insert(table.slice().release().reverse());
 	
@@ -99,7 +91,6 @@ const states = {
 	return 's_play';
     },
 };
-
 export const play = {
     0: async ctx => {
 	const {scene, width, height} = ctx;
