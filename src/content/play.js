@@ -9,13 +9,7 @@ const states = {
     s_setup: async ctx => {
 	const {scene, width, height} = ctx;
 	
-	const background = new Background().set({scene, images: [
-	    'field', 'hill', 'mountains', 'atmosphere',
-	    'earth', 'sun', 'space', 'galaxy', 'cluster',
-	    'creatures', 'cthulu', 'azathoth',
-	    'simulation', 'computation', 'simghosts', 'simgod',
-	    'simfractal', 'fractal', 'mandala', 'mandalasculs', 'devil',
-	]});
+	const background = new Background().set({scene, images: ['field', 'earth', 'galaxy']});
 	background.set({duration: 1000});
 	background.next();
 	background.set({duration: 2000});
